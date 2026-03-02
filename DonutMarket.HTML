@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donut Market</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@700&family=Inter:wght@400;500;600;700&display=swap');
+
+        :root {
+            --bg-nav: #0f1015;
+            --bg-card: #1e202b;
+            --text-main: #ffffff;
+            --text-muted: #8b8e9d;
+            --accent-blue: #4a8deb;
+            --accent-purple: #c471ed;
+            --btn-bg: #2a2d3e;
+            --border-color: #2a2d3e;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-main);
+            background: linear-gradient(180deg, #08080a 0%, #140822 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        nav {
+            width: 100%;
+            background-color: var(--bg-nav);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-sizing: border-box;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .nav-left { display: flex; align-items: center; gap: 15px; flex: 1; }
+        .nav-center { display: flex; justify-content: center; gap: 15px; flex: 1; }
+        
+        .header-btn {
+            background-color: var(--btn-bg);
+            border: 1px solid var(--border-color);
+            color: #ffffff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background-color 0.2s, border-color 0.2s;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .header-btn.primary { background-color: var(--accent-blue); border: none; }
+        .logo { font-family: 'Roboto Mono', monospace; font-size: 1.2rem; color: var(--accent-blue); cursor: pointer; }
+        .nav-actions { display: flex; justify-content: flex-end; flex: 1; gap: 10px; }
+        .nav-actions button { background-color: var(--btn-bg); border: 1px solid var(--border-color); color: var(--text-main); padding: 8px 15px; border-radius: 8px; cursor: pointer; }
+
+        .dropdown-container { position: relative; }
+        .dropdown-menu {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background-color: var(--btn-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            margin-top: 5px;
+            overflow: hidden;
+            z-index: 100;
+        }
+        .dropdown-menu.active { display: flex; flex-direction: column; }
+        .dropdown-menu span {
+            padding: 8px 0;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .dropdown-menu span:hover { background-color: var(--bg-card); }
+
+        .sidebar { position: fixed; top: 0; left: -280px; width: 280px; height: 100vh; background-color: var(--bg-nav); border-right: 1px solid var(--border-color); transition: left 0.3s ease; z-index: 1000; display: flex; flex-direction: column; padding: 20px; box-sizing: border-box; }
+        .sidebar.active { left: 0; }
+        .sidebar a { color: var(--text-main); text-decoration: none; font-size: 1.2rem; font-weight: 600; padding: 15px 10px; border-radius: 8px; cursor: pointer; }
+        
+        .cart-sidebar {
+            position: fixed; top: 0; right: -350px; width: 350px; height: 100vh;
+            background-color: var(--bg-nav); border-left: 1px solid var(--border-color);
+            transition: right 0.3s ease; z-index: 1000; display: flex; flex-direction: column;
+            padding: 20px; box-sizing: border-box;
+        }
+        .cart-sidebar.active { right: 0; }
+        .cart-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; margin-bottom: 15px; }
+        .close-btn { background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; padding: 0;}
+        #cart-items { flex-grow: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; align-items: center; padding-right: 5px; }
+        
+        .overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.6); z-index: 999; display: none; }
+        .overlay.active { display: block; }
+
+        .section { width: 100%; max-width: 1000px; padding: 40px 20px; box-sizing: border-box; display: none; }
+        .section.active { display: block; }
+
+        #home-section { text-align: center; flex-direction: column; align-items: center; margin-top: 40px; }
+        #home-section.active { display: flex; }
+        .home-title { font-family: 'Roboto Mono', monospace; font-size: 2.5rem; color: var(--accent-blue); margin-bottom: 15px; line-height: 1.2; }
+        .home-subtitle { font-size: 1rem; color: var(--text-muted); max-width: 600px; margin-bottom: 30px; line-height: 1.5; }
+        .info-box { background-color: rgba(30, 32, 43, 0.7); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; max-width: 700px; margin-bottom: 40px; font-size: 0.9rem; line-height: 1.6; }
+        .shop-now-btn { background: linear-gradient(90deg, #5b51d8, #4a8deb); color: white; border: none; padding: 12px 30px; border-radius: 20px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-bottom: 40px; transition: opacity 0.2s; }
+        .features-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 20px; width: 100%; max-width: 800px; }
+        .feature-card { background-color: rgba(30, 32, 43, 0.5); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; width: calc(50% - 10px); min-width: 250px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; }
+        .feature-card.full-width { width: 100%; max-width: 400px; }
+
+        .search-bar { width: 100%; background-color: var(--btn-bg); border: 1px solid var(--border-color); border-radius: 8px; padding: 15px 20px; color: var(--text-main); font-size: 1rem; margin-bottom: 20px; box-sizing: border-box; outline: none; }
+        .categories { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 30px; padding-bottom: 5px; }
+        .category { background-color: var(--btn-bg); border: 1px solid var(--border-color); color: var(--text-muted); padding: 8px 16px; border-radius: 20px; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+        .category.active { background-color: #253359; color: #82aaff; border-color: #3b5088; }
+        
+        .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+        .card { background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; }
+        .card-img { height: 180px; background: linear-gradient(180deg, #2a2d3e 0%, #1e202b 100%); position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .card-img img { width: 120%; height: 120%; object-fit: contain; }
+
+        .enlarged-img { width: 170% !important; height: 170% !important; }
+
+        .badge { position: absolute; top: 10px; right: 10px; padding: 6px 12px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; color: #000; z-index: 10; display: flex; align-items: center; }
+        .bg-multi { background: #ffd12a; } 
+        .bg-green { background-color: #38e54d; }
+        .bg-orange { background-color: #ffaa00; }
+
+        .card-content { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
+        .card-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 15px; font-family: 'Roboto Mono', monospace; }
+        .price-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .price-container { display: flex; align-items: center; gap: 8px; }
+        .current-price { color: var(--accent-purple); font-weight: 700; font-size: 1.1rem; }
+        .old-price { color: var(--text-muted); text-decoration: line-through; font-size: 0.85rem; }
+        .stock { color: var(--text-muted); font-size: 0.85rem; }
+
+        .controls-container { display: flex; flex-direction: column; gap: 10px; margin-top: auto; align-items: center; }
+        .quantity-row { display: flex; align-items: center; gap: 10px; background: var(--btn-bg); border-radius: 8px; padding: 5px; width: fit-content; }
+        .qty-btn { background: #3f445e; border: none; color: white; width: 28px; height: 28px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .qty-input { background: none; border: none; color: white; text-align: center; width: 60px; font-size: 1rem; font-weight: 600; outline: none; }
+        .qty-input::-webkit-outer-spin-button, .qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+        .qty-input[type=number] { -moz-appearance: textfield; }
+
+        .add-to-cart { background-color: var(--accent-blue); color: #fff; border: none; padding: 10px 0; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; width: 80%; }
+
+        #coming-soon-msg { display: none; text-align: center; padding: 60px 20px; }
+        
+        .checkout-container { max-width: 600px; margin: 0 auto; background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border-color); }
+        .checkout-title { margin-top: 0; font-size: 1.2rem; margin-bottom: 15px; color: var(--accent-blue); }
+        .pay-methods { display: flex; gap: 10px; margin-bottom: 20px; align-items: stretch; }
+
+        .header-btn.pay-method.active, .dropdown-container.pay-method.active > button { border-color: var(--accent-blue); background-color: var(--btn-bg); }
+
+        .fade-alert {
+            position: fixed;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: transparent;
+            border: none;
+            color: var(--accent-blue);
+            padding: 0;
+            box-shadow: none;
+            font-size: 3rem;
+            font-weight: bold;
+            font-family: 'Roboto Mono', monospace;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease-in-out;
+            text-align: center;
+        }
+        .fade-alert.active {
+            opacity: 1;
+        }
+
+        .instruction-box {
+            background: var(--bg-nav); 
+            padding: 20px; 
+            border-radius: 8px; 
+            border: 1px dashed var(--accent-purple); 
+            margin-bottom: 30px; 
+            text-align: left;
+        }
+
+        .invoice-box {
+            background: #15161e; 
+            padding: 25px; 
+            border-radius: 8px; 
+            border: 1px solid var(--border-color); 
+            margin-bottom: 30px; 
+            text-align: left;
+        }
+
+        .copy-btn {
+            background: var(--btn-bg);
+            border: 1px solid var(--border-color);
+            color: var(--accent-blue);
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-left: 10px;
+        }
+
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } .nav-center { display: none; } .pay-methods { flex-direction: column; } }
+    </style>
+</head>
+<body onload="updateAllCards(); renderCart();">
+
+    <div id="fade-alert" class="fade-alert">Coming soon</div>
+
+    <div id="sidebar" class="sidebar">
+        <button onclick="closeAll()" style="align-self:flex-end; background:none; border:none; color:white; font-size:1.5rem; cursor:pointer; margin-bottom:30px;">✕</button>
+        <a href="javascript:void(0);" onclick="showSection('home-section'); closeAll()">🏠 Home</a>
+        <a href="javascript:void(0);" onclick="showSection('shop-section'); closeAll()">🛍️ Shop</a>
+        <a href="javascript:void(0);" style="margin-top:auto; color:var(--accent-blue);">🎧 Support</a>
+    </div>
+
+    <div id="cart-sidebar" class="cart-sidebar">
+        <div class="cart-header">
+            <h2 style="margin:0; font-family:'Roboto Mono';">Your Cart</h2>
+            <button onclick="closeAll()" class="close-btn">✕</button>
+        </div>
+        <div id="cart-items">
+        </div>
+        <button class="shop-now-btn" style="width:100%; margin-bottom:0;" onclick="goToCheckout()">Checkout</button>
+    </div>
+
+    <div id="overlay" class="overlay" onclick="closeAll()"></div>
+
+    <nav>
+        <div class="nav-left">
+            <button style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer;" onclick="toggleMenu()">☰</button>
+            <div class="logo" onclick="showSection('home-section')">Donut Market</div>
+        </div>
+        <div class="nav-center">
+            <button class="header-btn" onclick="showSection('home-section')">🏠 Home</button>
+            <button class="header-btn primary" onclick="showSection('shop-section')">🛍️ Shop</button>
+        </div>
+        <div class="nav-actions">
+            <div class="dropdown-container">
+                <button id="currency-btn" onclick="toggleCurrency()">$ ▼</button>
+                <div id="currency-menu" class="dropdown-menu">
+                    <span onclick="changeCurrency('USD')">$ USD</span>
+                    <span onclick="changeCurrency('EUR')">€ EUR</span>
+                </div>
+            </div>
+            <button onclick="toggleCart()">🛒</button>
+        </div>
+    </nav>
+
+    <main id="home-section" class="section active">
+        <h1 class="home-title">Welcome to<br>Donut Market</h1>
+        <p class="home-subtitle">DonutSMP money and items are the key to dominating the server. Get everything you need for fast progression!</p>
+        <div class="info-box">
+            🛒 Buy money, spawners, elytra, bases, and premium gear at the best prices! ⚡ Only IN-GAME-NAME needed. Trusted by 4216+ players!
+        </div>
+        <button class="shop-now-btn" onclick="showSection('shop-section')">🛍️ Shop Now</button>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div style="font-size:1.5rem; margin-bottom:10px;">🚀</div>
+                <div style="font-weight:600; margin-bottom:8px;">Fast Delivery</div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Automated delivery for money and items transactions</div>
+            </div>
+            <div class="feature-card">
+                <div style="font-size:1.5rem; margin-bottom:10px;">🔒</div>
+                <div style="font-weight:600; margin-bottom:8px;">Secure Trading</div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Protected transactions with industry-standard encryption</div>
+            </div>
+            <div class="feature-card full-width">
+                <div style="font-size:1.5rem; margin-bottom:10px;">🎯</div>
+                <div style="font-weight:600; margin-bottom:8px;">24/7 Support</div>
+                <div style="font-size:0.8rem; color:var(--text-muted);">Round-the-clock customer support with Discord integration</div>
+            </div>
+        </div>
+    </main>
+
+    <main id="shop-section" class="section">
+        <h1 style="text-align:center; font-family:'Roboto Mono'; margin-bottom:30px;">SHOP DONUT SMP MONEY & ITEMS</h1>
+
+        <input type="text" id="searchInput" class="search-bar" placeholder="🔍 Search products..." onkeyup="searchProducts()">
+
+        <div class="categories">
+            <div class="category active" onclick="filterCategory('all', this)">🎯 All <span>6</span></div>
+            <div class="category" onclick="filterCategory('money', this)">💰 Money <span>1</span></div>
+            <div class="category" onclick="filterCategory('items', this)">📦 Items <span>4</span></div>
+            <div class="category" onclick="filterCategory('bundles', this)">🎒 Bundles <span>0</span></div>
+            <div class="category" onclick="filterCategory('armor', this)">👕 Armor <span>1</span></div>
+        </div>
+
+        <div id="coming-soon-msg">
+            <h2 style="font-family:'Roboto Mono'; color:var(--accent-blue);">Coming soon</h2>
+            <p style="font-style:italic; color:var(--text-muted);">we are working on it...</p>
+        </div>
+
+        <div class="grid" id="product-grid">
+            
+            <div class="card" data-category="money" data-type="money" data-name="donutsmp money" data-title="DonutSMP Money" data-stock="6339000000">
+                <div class="card-img">
+                    <div class="badge bg-multi">Best Value | Fast Delivery</div>
+                    <img src="https://i.imgur.com/XZuEGiI.jpeg">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">200M DonutSMP Money</h3>
+                    <div class="price-row">
+                        <div class="price-container"><span class="current-price">$1.99</span><span class="old-price">$3.50</span></div>
+                        <span class="stock">6339 In Stock</span>
+                    </div>
+                    <div class="controls-container">
+                        <div class="quantity-row">
+                            <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
+                            <input type="text" class="qty-input" value="200M" onchange="updateQtyManual(this)">
+                            <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
+                        </div>
+                        <button class="add-to-cart" onclick="addToCart(this)">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" data-category="items" data-name="skeleton spawner" data-base-price="0.19" data-base-old="1.80" data-title="Skeleton Spawner" data-stock="64219">
+                <div class="card-img">
+                    <div class="badge bg-orange">Rare | Fast Delivery</div>
+                    <img src="https://i.imgur.com/35yW1Dl.jpeg" class="enlarged-img"> 
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Skeleton Spawner</h3>
+                    <div class="price-row">
+                        <div class="price-container"><span class="current-price">$0.19</span><span class="old-price">$1.80</span></div>
+                        <span class="stock">64 219 In Stock</span>
+                    </div>
+                    <div class="controls-container">
+                        <div class="quantity-row">
+                            <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
+                            <input type="number" class="qty-input" value="1" min="1" onchange="updateQtyManual(this)">
+                            <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
+                        </div>
+                        <button class="add-to-cart" onclick="addToCart(this)">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" data-category="items" data-name="donutsmp elytra" data-base-price="6.03" data-base-old="27.00" data-title="DonutSMP Elytra" data-stock="2793">
+                <div class="card-img">
+                    <div class="badge bg-green" style="gap:5px;"><span>Rare</span><span>Fast Delivery</span></div>
+                    <img src="https://i.imgur.com/Jvoc2Qz.png">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">DonutSMP Elytra</h3>
+                    <div class="price-row">
+                        <div class="price-container"><span class="current-price">$6.03</span><span class="old-price">$27.00</span></div>
+                        <span class="stock">2793 In Stock</span>
+                    </div>
+                    <div class="controls-container">
+                        <div class="quantity-row">
+                            <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
+                            <input type="number" class="qty-input" value="1" min="1" onchange="updateQtyManual(this)">
+                            <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
+                        </div>
+                        <button class="add-to-cart" onclick="addToCart(this)">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" data-category="items" data-name="donutsmp netherite block" data-base-price="1.99" data-base-old="8.99" data-title="DonutSMP Netherite Block" data-stock="2457">
+                <div class="card-img">
+                    <div class="badge bg-multi" style="background:#4db8ff;">Rare | Fast Delivery</div>
+                    <img src="https://i.imgur.com/bysXcMI.jpeg">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">DonutSMP Netherite Block</h3>
+                    <div class="price-row">
+                        <div class="price-container"><span class="current-price">$1.99</span><span class="old-price">$8.99</span></div>
+                        <span class="stock">2457 In Stock</span>
+                    </div>
+                    <div class="controls-container">
+                        <div class="quantity-row">
+                            <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
+                            <input type="number" class="qty-input" value="1" min="1" onchange="updateQtyManual(this)">
+                            <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
+                        </div>
+                        <button class="add-to-cart" onclick="addToCart(this)">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" data-category="armor" data-name="netherite armor shulker" data-base-price="2.99" data-base-old="23.99" data-title="Netherite Armor Shulker" data-stock="2210">
+                <div class="card-img">
+                    <div class="badge bg-multi" style="background:#a855f7; color:white;">Rare | Fast Delivery</div>
+                    <img src="https://i.imgur.com/UCVwZTX.jpeg">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">Netherite Armor Shulker</h3>
+                    <div class="price-row">
+                        <div class="price-container"><span class="current-price">$2.99</span><span class="old-price">$23.99</span></div>
+                        <span class="stock">2210 In Stock</span>
+                    </div>
+                    <div class="controls-container">
+                        <div class="quantity-row">
+                            <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
+                            <input type="number" class="qty-input" value="1" min="1" onchange="updateQtyManual(this)">
+                            <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
+                        </div>
+                        <button class="add-to-cart" onclick="addToCart(this)">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" data-category="items" data-name="god mystery shulker" data-base-price="2.99" data-base-old="19.99" data-title="God Mystery Shulker" data-stock="2210">
+                <div class="card-img">
+                    <div class="badge bg-multi">Best Value | Rare</div>
+                    <img src="https://i.imgur.com/kx1LOSh.jpeg">
+                </div>
+                <div class="card-content">
+                    <h3 class="card-title">God Mystery Shulker</h3>
+                    <div class="price-row">
+                        <div class="price-container"><span class="current-price">$2.99</span><span class="old-price">$19.99</span></div>
+                        <span class="stock">2210 In Stock</span>
+                    </div>
+                    <div class="controls-container">
+                        <div class="quantity-row">
+                            <button class="qty-btn" onclick="updateQty(this, -1)">-</button>
+                            <input type="number" class="qty-input" value="1" min="1" onchange="updateQtyManual(this)">
+                            <button class="qty-btn" onclick="updateQty(this, 1)">+</button>
+                        </div>
+                        <button class="add-to-cart" onclick="addToCart(this)">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <main id="checkout-section" class="section">
+        <h1 style="text-align:center; font-family:'Roboto Mono'; margin-bottom:30px;">SECURE CHECKOUT</h1>
+        <div class="checkout-container">
+            <h2 class="checkout-title">1. Player Details <span style="color:#ff4a4a;">*</span></h2>
+            <input type="text" id="ign-input" class="search-bar" placeholder="Minecraft In-Game Name *" style="margin-bottom: 5px;" oninput="document.getElementById('ign-error').style.display='none'">
+            <div id="ign-error" style="color: #ff4a4a; font-size: 0.85rem; margin-bottom: 25px; display: none;">! Please enter your in-game name</div>
+
+            <h2 class="checkout-title">2. Payment Method</h2>
+            <div class="pay-methods">
+                <div class="dropdown-container pay-method active" id="pay-method-dropdown-container" style="flex: 1; display: flex;">
+                    <button class="header-btn" id="pay-method-display-btn" onclick="togglePayMethodDropdown()" style="flex: 1; width: 100%; height: 100%; justify-content: center; border-color: var(--border-color);">
+                        <span>PayPal</span>
+                        <span style="color: #00e5ff; margin-left: 8px; font-size: 0.8rem;">▼</span>
+                    </button>
+                    <div id="pay-method-menu" class="dropdown-menu">
+                        <span onclick="selectPayMethodViaDropdown('PayPal')">PayPal</span>
+                        <span onclick="selectPayMethodViaDropdown('Klarna')">Klarna</span>
+                        <span onclick="selectPayMethodViaDropdown('Revolut')">Revolut</span>
+                        <span onclick="selectPayMethodViaDropdown('CashApp')">CashApp</span>
+                    </div>
+                </div>
+                
+                <button class="header-btn pay-method" onclick="selectPayMethod(this, 'card')" style="flex:1; justify-content:center; gap: 8px;">
+                    <span>card</span>
+                    <div style="display: flex; gap: 4px; align-items: center;">
+                        <img src="https://i.imgur.com/YxKYo7P.jpeg" alt="Logo 1" style="height: 30px;"> 
+                        <img src="https://i.imgur.com/SZXibyR.png" alt="Logo 2" style="height: 48px;"> 
+                    </div>
+                </button>
+                
+                <button class="header-btn pay-method" onclick="selectPayMethod(this, 'crypto'); showFadeAlert('Coming soon');" style="flex:1; justify-content:center; color: var(--text-muted);">Crypto</button>
+            </div>
+
+            <h2 class="checkout-title">3. Order Summary</h2>
+            <div id="checkout-summary" style="background: var(--btn-bg); padding: 15px; border-radius: 8px; margin-bottom: 30px;">
+            </div>
+
+            <button class="shop-now-btn" style="width: 100%; margin: 0;" onclick="completeOrder()">Pay Now</button>
+        </div>
+    </main>
+
+    <main id="invoice-section" class="section">
+        <h1 style="text-align:center; font-family:'Roboto Mono'; margin-bottom:10px; color:var(--accent-blue);">ORDER CREATED</h1>
+        <div class="checkout-container" style="text-align: center;">
+            <p style="color:var(--text-muted); font-size: 1rem; margin-bottom: 25px; margin-top:0;">
+                Please complete your payment to instantly receive your items.
+            </p>
+
+            <div class="invoice-box">
+                <div style="display:flex; justify-content:space-between; margin-bottom: 15px;">
+                    <span style="color:var(--text-muted);">Order ID:</span>
+                    <span id="inv-order-id" style="font-family:'Roboto Mono'; font-weight:bold; color:var(--text-main);"></span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 15px;">
+                    <span style="color:var(--text-muted);">In-Game Name:</span>
+                    <span id="inv-ign" style="font-weight:bold; color:#ffaa00;"></span>
+                </div>
+                <div style="display:flex; justify-content:space-between; margin-bottom: 15px;">
+                    <span style="color:var(--text-muted);">Amount Due:</span>
+                    <span id="inv-amount" style="font-weight:bold; color:var(--accent-blue); font-size: 1.2rem;"></span>
+                </div>
+                
+                <hr style="border-color:var(--border-color); margin: 20px 0;">
+                
+                <div style="font-weight:bold; margin-bottom: 10px; color:var(--text-main);">Payment Instructions</div>
+                <div style="color:var(--text-muted); font-size:0.9rem; line-height: 1.6;">
+                    1. Log into your <strong style="color: white;" id="inv-method-text">PayPal</strong> account.<br>
+                    2. Send the exact amount to: 
+                    <div style="margin: 10px 0; display:flex; align-items:center;">
+                        <strong style="color: white;">Open.mail@gmx.at</strong> <button class="copy-btn" onclick="copyText('Open.mail@gmx.at')">Copy</button>
+                    </div>
+                    3. <strong>IMPORTANT:</strong> Include your Order ID (<span id="inv-order-id-2" style="color:white; font-family:'Roboto Mono';"></span>) in the payment notes!
+                </div>
+            </div>
+
+            <p style="font-size: 0.85rem; color: #ff4a4a; margin-bottom: 30px;">
+                *Do not close this page until your payment is sent. Your items will be delivered within 1-3 minutes after payment confirmation.
+            </p>
+
+            <button class="shop-now-btn" style="width: 100%;" onclick="finishAndGoHome()">I have paid</button>
+        </div>
+    </main>
+
+    <main id="payment-instructions-section" class="section">
+        <h1 style="text-align:center; font-family:'Roboto Mono'; margin-bottom:20px; color:var(--accent-blue);">PAYMENT REQUIRED</h1>
+        <div class="checkout-container" style="text-align: center;">
+            <p style="color:var(--text-muted); font-size: 1.1rem; line-height: 1.6; margin-bottom: 30px; margin-top:0;">
+                Please securely complete your payment via Ko-fi to receive your items.
+            </p>
+
+            <div class="instruction-box" style="text-align: center;">
+                <div style="margin-bottom: 10px;"><strong>Amount to Pay:</strong> <span id="instruction-amount" style="color:var(--accent-blue); font-size:1.5rem;"></span></div>
+                <div id="instruction-details" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--border-color); line-height: 1.5;">
+                </div>
+            </div>
+
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 30px;">
+                Once the payment is received with your In-Game Name, your items will be delivered.
+            </p>
+
+            <button class="shop-now-btn" style="width: 100%;" onclick="finishAndGoHome()">Back to Home</button>
+        </div>
+    </main>
+
+    <script>
+        let cart = [];
+        let isEuro = false;
+        let eurMultiplier = 7.62 / 9;
+        let currencySymbol = '$';
+        const DELIVERY_FEE_USD = 0.20; 
+
+        function toggleMenu() {
+            document.getElementById('sidebar').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function toggleCart() {
+            document.getElementById('cart-sidebar').classList.add('active');
+            document.getElementById('overlay').classList.add('active');
+        }
+
+        function closeAll() {
+            document.getElementById('sidebar').classList.remove('active');
+            document.getElementById('cart-sidebar').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('currency-menu').classList.remove('active');
+            
+            const payMethodMenu = document.getElementById('pay-method-menu');
+            if (payMethodMenu) {
+                payMethodMenu.classList.remove('active');
+            }
+        }
+
+        function toggleCurrency() {
+            document.getElementById('currency-menu').classList.toggle('active');
+        }
+
+        function changeCurrency(currency) {
+            const btn = document.getElementById('currency-btn');
+            
+            if (currency === 'EUR' && !isEuro) {
+                btn.innerHTML = '€ ▼';
+                isEuro = true;
+                currencySymbol = '€';
+            } else if (currency === 'USD' && isEuro) {
+                btn.innerHTML = '$ ▼';
+                isEuro = false;
+                currencySymbol = '$';
+            }
+            updateAllCards();
+            renderCart();
+            if (document.getElementById('checkout-section').classList.contains('active')) {
+                renderCheckoutSummary();
+            }
+            toggleCurrency();
+        }
+
+        function showSection(sectionId) {
+            document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            window.scrollTo(0, 0);
+        }
+
+        function parseAmount(val) {
+            if (typeof val === 'number') return val;
+            val = val.toString().toLowerCase().replace(/,/g, '');
+            if (val.endsWith('m')) return parseFloat(val) * 1000000;
+            if (val.endsWith('k')) return parseFloat(val) * 1000;
+            return parseFloat(val) || 0;
+        }
+
+        function formatAmount(val) {
+            if (val >= 1000000) return (val / 1000000) + 'M';
+            if (val >= 1000) return (val / 1000) + 'K';
+            return val;
+        }
+
+        function getMaxStock(card) {
+            const stock = card.getAttribute('data-stock');
+            if (stock === 'unlimited') return Infinity;
+            return parseInt(stock);
+        }
+
+        function updateQty(btn, change) {
+            const card = btn.closest('.card');
+            const input = card.querySelector('.qty-input');
+            const isMoney = card.getAttribute('data-type') === 'money';
+            const maxStock = getMaxStock(card);
+
+            if (isMoney) {
+                let current = parseAmount(input.value);
+                current += change * 1000000; 
+                if (current < 1000000) current = 1000000; 
+                if (current > maxStock) current = maxStock;
+                input.value = formatAmount(current);
+            } else {
+                let val = parseInt(input.value) + change;
+                if (val < 1 || isNaN(val)) val = 1;
+                if (val > maxStock) val = maxStock;
+                input.value = val;
+            }
+            updateCardDisplay(card);
+        }
+
+        function updateQtyManual(input) {
+            const card = input.closest('.card');
+            const isMoney = card.getAttribute('data-type') === 'money';
+            const maxStock = getMaxStock(card);
+
+            if (isMoney) {
+                let current = parseAmount(input.value);
+                if (current < 1000000) current = 1000000; 
+                if (current > maxStock) current = maxStock;
+                input.value = formatAmount(current);
+            } else {
+                let val = parseInt(input.value);
+                if (val < 1 || isNaN(val)) input.value = 1;
+                if (val > maxStock) val = maxStock;
+                input.value = val;
+            }
+            updateCardDisplay(card);
+        }
+
+        function updateCardDisplay(card) {
+            const qtyInput = card.querySelector('.qty-input');
+            const isMoney = card.getAttribute('data-type') === 'money';
+            let qty = isMoney ? parseAmount(qtyInput.value) : parseInt(qtyInput.value);
+
+            let displayQty = qty > 0 ? qty : 1; 
+
+            const title = card.getAttribute('data-title');
+            const currentPriceEl = card.querySelector('.current-price');
+            const oldPriceEl = card.querySelector('.old-price');
+            const titleEl = card.querySelector('.card-title');
+            
+            let currentTotal, oldTotal;
+
+            if (isMoney) {
+                const pricePerM_USD = 1.99 / 200; 
+                const oldPerM_USD = 3.50 / 200; 
+                let millions = qty / 1000000;
+                
+                let calcCurrentUSD = millions * pricePerM_USD;
+                let calcOldUSD = millions * oldPerM_USD;
+
+                if (isEuro) {
+                    currentTotal = calcCurrentUSD * eurMultiplier;
+                    oldTotal = calcOldUSD * eurMultiplier;
+                } else {
+                    currentTotal = calcCurrentUSD;
+                    oldTotal = calcOldUSD;
+                }
+
+                if (currentTotal < 0.01) currentTotal = 0.01; 
+                
+                titleEl.innerText = formatAmount(qty) + ' ' + title;
+            } else {
+                const basePriceUSD = parseFloat(card.getAttribute('data-base-price'));
+                const baseOldUSD = parseFloat(card.getAttribute('data-base-old'));
+                
+                if (qty > 1) {
+                    titleEl.innerText = qty + 'x ' + title;
+                } else {
+                    titleEl.innerText = title;
+                }
+                
+                if (isEuro) {
+                    currentTotal = basePriceUSD * eurMultiplier * displayQty;
+                    oldTotal = baseOldUSD * eurMultiplier * displayQty;
+                } else {
+                    currentTotal = basePriceUSD * displayQty;
+                    oldTotal = baseOldUSD * displayQty;
+                }
+            }
+            
+            currentPriceEl.innerText = currencySymbol + currentTotal.toFixed(2);
+            oldPriceEl.innerText = currencySymbol + oldTotal.toFixed(2);
+        }
+
+        function updateAllCards() {
+            document.querySelectorAll('.card').forEach(card => {
+                updateCardDisplay(card);
+            });
+        }
+
+        function searchProducts() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.card');
+            cards.forEach(card => {
+                const name = card.getAttribute('data-name');
+                card.style.display = name.includes(term) ? 'flex' : 'none';
+            });
+        }
+
+        function filterCategory(category, element) {
+            document.querySelectorAll('.category').forEach(cat => cat.classList.remove('active'));
+            element.classList.add('active');
+            const grid = document.getElementById('product-grid');
+            const msg = document.getElementById('coming-soon-msg');
+            const cards = document.querySelectorAll('.card');
+
+            if (category === 'bundles') {
+                grid.style.display = 'none';
+                msg.style.display = 'block';
+            } else {
+                grid.style.display = 'grid';
+                msg.style.display = 'none';
+                cards.forEach(card => {
+                    card.style.display = (category === 'all' || card.getAttribute('data-category') === category) ? 'flex' : 'none';
+                });
+            }
+        }
+
+        function addToCart(btn) {
+            const card = btn.closest('.card');
+            const isMoney = card.getAttribute('data-type') === 'money';
+            const qtyInput = card.querySelector('.qty-input');
+            const title = card.getAttribute('data-title');
+            const id = card.getAttribute('data-name');
+            const maxStock = getMaxStock(card);
+
+            let qty = isMoney ? parseAmount(qtyInput.value) : parseInt(qtyInput.value);
+            if (qty <= 0) return;
+
+            let itemPriceUSD = 0;
+            if (isMoney) {
+                const pricePerM_USD = 1.99 / 200;
+                let millions = qty / 1000000;
+                itemPriceUSD = millions * pricePerM_USD;
+                if(itemPriceUSD < 0.01) itemPriceUSD = 0.01;
+            } else {
+                const basePriceUSD = parseFloat(card.getAttribute('data-base-price'));
+                itemPriceUSD = basePriceUSD * qty;
+            }
+
+            let existing = cart.find(i => i.id === id);
+            if (existing) {
+                existing.qty += qty;
+                if (existing.qty > maxStock) existing.qty = maxStock;
+                
+                if(isMoney) {
+                    existing.priceUSD = (existing.qty / 1000000) * (1.99/200);
+                    if(existing.priceUSD < 0.01) existing.priceUSD = 0.01;
+                } else {
+                    existing.priceUSD = parseFloat(card.getAttribute('data-base-price')) * existing.qty;
+                }
+            } else {
+                cart.push({ id, title, qty, priceUSD: itemPriceUSD, isMoney });
+            }
+
+            renderCart();
+            toggleCart();
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            if (cart.length === 0) {
+                container.style.justifyContent = 'center';
+                container.innerHTML = '<p style="color:var(--text-muted); text-align:center; margin-top: auto; margin-bottom: auto;">Your cart is currently empty.</p>';
+                return;
+            }
+
+            container.style.justifyContent = 'flex-start';
+            let html = '<div style="width:100%; display:flex; flex-direction:column; gap:15px;">';
+            let itemsTotalUSD = 0;
+
+            cart.forEach((item, index) => {
+                itemsTotalUSD += item.priceUSD;
+                let displayQty = item.isMoney ? formatAmount(item.qty) : item.qty;
+                let displayPrice = (isEuro ? (item.priceUSD * eurMultiplier) : item.priceUSD).toFixed(2);
+                
+                html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--btn-bg); padding:12px; border-radius:8px;">
+                    <div>
+                        <div style="font-weight:600; font-size:0.95rem; margin-bottom:5px;">${displayQty}x ${item.title}</div>
+                        <div style="color:var(--accent-purple); font-weight:700;">${currencySymbol}${displayPrice}</div>
+                    </div>
+                    <button onclick="removeFromCart(${index})" style="background:none;border:none;color:#ff4a4a;cursor:pointer;font-size:1.3rem;">✕</button>
+                </div>`;
+            });
+
+            let deliveryFeeConverted = isEuro ? (DELIVERY_FEE_USD * eurMultiplier) : DELIVERY_FEE_USD;
+            html += `
+                <div style="display:flex; justify-content:space-between; font-size:0.9rem; color:var(--text-muted); padding: 0 10px;">
+                    <span>Delivery</span>
+                    <span>${currencySymbol}${deliveryFeeConverted.toFixed(2)}</span>
+                </div>
+            `;
+
+            let totalUSD = itemsTotalUSD + DELIVERY_FEE_USD;
+            let displayTotal = (isEuro ? (totalUSD * eurMultiplier) : totalUSD).toFixed(2);
+            html += `
+                <hr style="border-color:var(--border-color); width:100%; margin: 5px 0;">
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.2rem; width:100%;">
+                    <span>Total:</span>
+                    <span style="color:var(--accent-blue);">${currencySymbol}${displayTotal}</span>
+                </div>
+            `;
+            html += '</div>';
+
+            container.innerHTML = html;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            renderCart();
+        }
+
+        function goToCheckout() {
+            if (cart.length === 0) {
+                showFadeAlert("Your cart is empty!");
+                return;
+            }
+            closeAll();
+            showSection('checkout-section');
+            renderCheckoutSummary();
+        }
+
+        function togglePayMethodDropdown() {
+            document.getElementById('pay-method-menu').classList.toggle('active');
+            document.querySelectorAll('#checkout-section .pay-methods .pay-method').forEach(b => b.classList.remove('active'));
+            document.getElementById('pay-method-dropdown-container').classList.add('active');
+        }
+
+        function selectPayMethodViaDropdown(methodName) {
+            togglePayMethodDropdown();
+            
+            document.getElementById('pay-method-display-btn').innerHTML = `
+                <span>${methodName}</span>
+                <span style="color: #00e5ff; margin-left: 8px; font-size: 0.8rem;">▼</span>
+            `;
+            
+            document.querySelectorAll('#checkout-section .pay-methods .pay-method').forEach(b => b.classList.remove('active'));
+            document.getElementById('pay-method-dropdown-container').classList.add('active');
+        }
+
+        function selectPayMethod(btn, method) {
+            document.querySelectorAll('#checkout-section .pay-methods .pay-method').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function showFadeAlert(msg) {
+            const alertBox = document.getElementById('fade-alert');
+            alertBox.innerText = msg;
+            alertBox.classList.add('active');
+            setTimeout(() => {
+                alertBox.classList.remove('active');
+            }, 900);
+        }
+        
+        function copyText(text) {
+            navigator.clipboard.writeText(text);
+            showFadeAlert("Copied!");
+        }
+
+        function renderCheckoutSummary() {
+            const summary = document.getElementById('checkout-summary');
+            let itemsTotalUSD = 0;
+            let html = '<div style="display:flex; flex-direction:column; gap:10px;">';
+            
+            cart.forEach(item => {
+                itemsTotalUSD += item.priceUSD;
+                let displayQty = item.isMoney ? formatAmount(item.qty) : item.qty;
+                let displayPrice = (isEuro ? (item.priceUSD * eurMultiplier) : item.priceUSD).toFixed(2);
+                
+                html += `
+                <div style="display:flex; justify-content:space-between; font-size: 0.95rem;">
+                    <span>${displayQty}x ${item.title}</span>
+                    <span style="color:var(--text-muted);">${currencySymbol}${displayPrice}</span>
+                </div>`;
+            });
+
+            let deliveryFeeConverted = isEuro ? (DELIVERY_FEE_USD * eurMultiplier) : DELIVERY_FEE_USD;
+             html += `
+                <div style="display:flex; justify-content:space-between; font-size: 0.95rem; color:var(--text-muted);">
+                    <span>Delivery</span>
+                    <span>${currencySymbol}${deliveryFeeConverted.toFixed(2)}</span>
+                </div>`;
+
+            let totalUSD = itemsTotalUSD + DELIVERY_FEE_USD;
+            let displayTotal = (isEuro ? (totalUSD * eurMultiplier) : totalUSD).toFixed(2);
+            html += `<hr style="border-color:var(--border-color); margin:10px 0;">`;
+            html += `
+                <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.2rem; color:var(--accent-blue);">
+                    <span>Total:</span>
+                    <span>${currencySymbol}${displayTotal}</span>
+                </div>`;
+            html += '</div>';
+
+            summary.innerHTML = html;
+        }
+
+        function completeOrder() {
+            const ign = document.getElementById('ign-input').value.trim();
+            const ignError = document.getElementById('ign-error');
+            
+            if (!ign) {
+                ignError.style.display = 'block';
+                return;
+            }
+            ignError.style.display = 'none';
+
+            const activeMethod = document.querySelector('#checkout-section .pay-methods .pay-method.active');
+            let methodTitle = "";
+            if (!activeMethod) {
+                 showFadeAlert("Select a payment method!");
+                 return;
+            }
+
+            if (activeMethod.tagName === 'DIV') {
+                methodTitle = activeMethod.querySelector('button > span').innerText;
+            } else {
+                methodTitle = activeMethod.querySelector('span') ? activeMethod.querySelector('span').innerText : activeMethod.innerText;
+            }
+
+            let itemsTotalUSD = 0;
+            cart.forEach(item => itemsTotalUSD += item.priceUSD);
+            let totalUSD = itemsTotalUSD + DELIVERY_FEE_USD;
+            let displayTotal = (isEuro ? (totalUSD * eurMultiplier) : totalUSD).toFixed(2);
+            let finalAmountStr = currencySymbol + displayTotal;
+            
+            let orderId = '#DM-' + Math.floor(10000 + Math.random() * 90000);
+
+            closeAll();
+
+            if (methodTitle.toLowerCase() === 'card') {
+                document.getElementById('instruction-amount').innerText = finalAmountStr;
+
+                let detailsHtml = `
+                    <div style="font-size: 1.1rem; margin-bottom: 15px;">
+                        Please complete your payment via Ko-fi using the button below.<br>
+                        You can pay safely using <strong>PayPal or Card</strong>.
+                    </div>
+                    <div style="background: rgba(255, 74, 74, 0.1); border: 1px solid #ff4a4a; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <span style="color:#ff4a4a; font-weight:bold; font-size: 1.1rem;">CRITICAL INSTRUCTION:</span><br>
+                        You <strong>MUST</strong> enter your exact In-Game Name (<span style="color:#ffaa00; font-weight:bold;">${ign}</span>) in the Ko-fi donation message so we know who to deliver the items to!
+                    </div>
+                    <a href="https://ko-fi.com/donut_market" target="_blank" class="shop-now-btn" style="display: inline-block; text-decoration: none; width: 100%; text-align: center; box-sizing: border-box;">Pay on Ko-fi</a>
+                `;
+
+                document.getElementById('instruction-details').innerHTML = detailsHtml;
+                showSection('payment-instructions-section');
+            } else {
+                document.getElementById('inv-order-id').innerText = orderId;
+                document.getElementById('inv-order-id-2').innerText = orderId;
+                document.getElementById('inv-ign').innerText = ign;
+                document.getElementById('inv-amount').innerText = finalAmountStr;
+                document.getElementById('inv-method-text').innerText = methodTitle;
+                
+                showSection('invoice-section');
+            }
+        }
+
+        function finishAndGoHome() {
+            showFadeAlert("Order Confirmed!");
+            setTimeout(() => {
+                cart = [];
+                document.getElementById('ign-input').value = '';
+                renderCart();
+                showSection('home-section');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
